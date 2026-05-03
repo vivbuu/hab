@@ -790,13 +790,7 @@ function joinChat() {
     });
     
     socket.emit('join', { name: nick, room: room, password: password });
-    
-    setTimeout(function() {
-        if (!allowed) {
-            alert('Не удалось войти. Проверьте пароль.');
-        }
-    }, 2000);
-}
+ 
 
 socket.on('message', function(msg) {
 	 if (msg.room && msg.room !== currentRoom) return;
