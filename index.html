@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ХАБ</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --card: #161b22;
+            --text: #e6e6e6;
+            --text2: #8b949e;
+            --accent: #4CAF50;
+            --danger: #f85149;
+            --input-bg: #21262d;
+            --border: #30363d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 16px;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Содержимое */
+        #content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        .tab {
+            display: none;
+            animation: fadeIn 0.2s;
+        }
+
+        .tab.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Вкладки внизу */
+        #tabs {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            padding: 6px 0;
+            padding-bottom: max(6px, env(safe-area-inset-bottom));
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 65px;
+        }
+
+        #tabs button {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            color: var(--text2);
+            font-size: 11px;
+            cursor: pointer;
+            padding: 4px;
+            min-height: 48px;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+              #tabs button .icon {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 2px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--input-bg);
+            border-radius: 50%;
+            line-height: 1;
+        }
+
+        #tabs button.active {
+            color: var(--accent);
+        }
+
+        #tabs button.active::after {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background: var(--accent);
+            border-radius: 0 0 3px 3px;
+        }
+
+        /* Общие стили элементов */
+        input,
+        select,
+        textarea {
+            font-size: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            width: 100%;
+            -webkit-appearance: none;
+        }
+
+        button {
+            min-width: 44px;
+            min-height: 44px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            background: var(--accent);
+            color: white;
+            padding: 10px 16px;
+            transition: opacity 0.2s;
+        }
+
+        button:active {
+            opacity: 0.8;
+        }
+
+        h2 {
+            margin-bottom: 16px;
+            font-size: 22px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Содержимое вкладок -->
+    <div id="content">
+        <div id="tab-time" class="tab active">
+    <div style="text-align:center; padding-top:40px;">
+        <div id="clock" style="font-size:72px; font-weight:bold; letter-spacing:4px;">00:00</div>
+        <div id="date" style="font-size:20px; color:var(--text2); margin-top:8px;"></div>
+          <div id="weekday" style="font-size:18px; color:var(--accent); margin-top:4px;"></div>
+        <select id="citySelect" onchange="updateCityTime()" style="margin-top:30px; width:200px; font-size:16px; padding:10px; background:var(--input-bg); color:var(--text); border:1px solid var(--border); border-radius:8px;">
+    <option value="local">Моё время</option>
+    <option value="MSK">Москва</option>
+    <option value="LON">Лондон</option>
+    <option value="NYC">Нью-Йорк</option>
+    <option value="TKY">Токио</option>
+    <option value="PEK">Пекин</option>
+</select>
+      
+<div id="cityTime" style="font-size:40px; font-weight:bold; margin-top:16px; color:var(--accent);"></div>
+<div id="cityDate" style="font-size:16px; color:var(--text2); margin-top:4px;"></div>
+
+    </div>
+</div>
+      <div id="tab-player" class="tab">
+    <h2>Плеер</h2>
+    
+    <!-- Текущий трек -->
+    <div class="card" style="text-align:center;">
+        <div id="nowPlaying" style="font-size:18px; font-weight:bold; color:var(--accent); min-height:24px;">Нет трека</div>
+        <div id="trackTime" style="font-size:14px; color:var(--text2); margin-top:4px;">0:00 / 0:00</div>
+        <input type="range" id="progressBar" value="0" min="0" max="100" step="1" 
+               style="width:100%; margin-top:12px; accent-color:var(--accent);" oninput="seek(this.value)">
+    </div>
+    
+    <!-- Кнопки управления -->
+    <div style="display:flex; justify-content:center; gap:16px; margin:16px 0;">
+        <button onclick="prevTrack()" style="background:var(--card); font-size:24px;">|◀</button>
+      <button onclick="togglePlay()" id="playBtn" style="background:var(--accent); font-size:28px; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; line-height:1; padding:0;">▶</button>
+        <button onclick="nextTrack()" style="background:var(--card); font-size:24px;">▶|</button>
+    </div>
+    
+    <!-- Громкость -->
+    <div style="display:flex; align-items:center; gap:10px;">
+        <span style="color:var(--text2);">Тихо</span>
+        <input type="range" id="volumeBar" value="80" min="0" max="100" style="flex:1; accent-color:var(--accent);" oninput="setVolume(this.value)">
+        <span style="color:var(--text2);">Громко</span>
+    </div>
+    
+    <!-- Добавить MP3 -->
+    <div style="margin-top:20px;">
+        <input type="file" id="fileInput" accept="audio/*" multiple style="display:none;" onchange="addTracks(this.files)">
+        <button onclick="document.getElementById('fileInput').click()" style="width:100%; background:var(--card); color:var(--accent); font-size:16px;">
+            + Добавить MP3
+        </button>
+    </div>
+    
+    <!-- Плейлист -->
+    <div style="margin-top:16px;">
+        <h3>Плейлист</h3>
+        <div style="margin-top:16px;">
+    <button onclick="submitTrack()" style="width:100%; background:var(--card); color:var(--accent);">Отправить трек на модерацию</button>
+</div>
+        <ul id="playlist" style="list-style:none; padding:0;"></ul>
+    </div>
+</div>
+        <div id="tab-chat" class="tab">
+    <h2>Чат</h2>
+    
+    <div id="chatLogin">
+        <select id="roomSelect" style="margin-bottom:10px;">
+            <option value="Общая">Общая</option>
+            <option value="С паролем">С паролем</option>
+            <option value="Третья">Третья</option>
+        </select>
+        <input id="chatPassword" type="text" placeholder="Пароль (если нужен)" style="margin-bottom:10px;">
+        <input id="chatNick" type="text" placeholder="Твой ник" style="margin-bottom:10px;">
+        <button onclick="joinChat()" style="width:100%;">Войти в чат</button>
+    </div>
+    
+    <div id="chatRoom" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span id="roomLabel" style="color:var(--accent);"></span>
+            <button onclick="leaveChat()" style="background:var(--card); font-size:12px; min-width:auto; min-height:32px; padding:4px 12px;">Выйти</button>
+        </div>
+        <div id="chatMessages" style="border:1px solid var(--border); border-radius:8px; height:300px; overflow-y:auto; padding:10px; margin-bottom:10px; background:var(--card);"></div>
+        <div style="display:flex; gap:8px;">
+            <input id="chatInput" type="text" placeholder="Сообщение..." style="flex:1;" onkeydown="if(event.key==='Enter')sendMsg()">
+            <button onclick="sendMsg()">Отпр</button>
+            <button onclick="clearChatRoom()" style="background:var(--danger);">Очистить</button>
+        </div>
+    </div>
+</div>
+        <div id="tab-notes" class="tab">
+    <h2>Заметки</h2>
+    
+    <textarea id="noteInput" placeholder="Текст заметки..." style="height:120px; margin-bottom:10px; resize:vertical;"></textarea>
+    <button onclick="saveNote()" style="width:100%; margin-bottom:16px;">Сохранить</button>
+    
+    <div id="notesList"></div>
+</div>
+      <div id="tab-timer" class="tab">
+    <h2>Таймер</h2>
+    
+    <!-- Переключатель режима -->
+    <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <button id="btnTimer" onclick="setMode('timer')" style="flex:1; background:var(--accent);">Таймер</button>
+        <button id="btnStopwatch" onclick="setMode('stopwatch')" style="flex:1; background:var(--card);">Секундомер</button>
+    </div>
+    
+    <!-- Настройка таймера -->
+    <div id="timerSetup">
+        <div style="display:flex; gap:8px; align-items:center; justify-content:center; margin-bottom:16px;">
+            <input id="minInput" type="number" value="5" min="1" max="99" style="width:70px; text-align:center; font-size:24px;">
+            <span style="font-size:24px;">:</span>
+            <input id="secInput" type="number" value="0" min="0" max="59" style="width:70px; text-align:center; font-size:24px;">
+        </div>
+        <button onclick="startTimer()" style="width:100%;">Старт</button>
+    </div>
+    
+    <!-- Дисплей -->
+    <div id="timerDisplay" style="text-align:center; font-size:64px; font-weight:bold; margin:20px 0; display:none;">00:00</div>
+    
+    <!-- Кнопки управления -->
+    <div id="timerControls" style="display:none; gap:8px;">
+        <button onclick="pauseTimer()" id="pauseBtn" style="flex:1; background:var(--card);">Пауза</button>
+        <button onclick="resetTimer()" style="flex:1; background:var(--danger);">Сброс</button>
+    </div>
+</div>
+       <div id="tab-random" class="tab">
+    <h2>Рандом</h2>
+    
+    <!-- Кубик -->
+    <div class="card" style="text-align:center;">
+        <h3>Кубик</h3>
+        <div id="diceResult" style="font-size:64px; font-weight:bold; margin:16px 0;">-</div>
+        <button onclick="rollDice()">Бросить</button>
+    </div>
+    
+    <!-- Монетка -->
+    <div class="card" style="text-align:center;">
+        <h3>Монетка</h3>
+        <div id="coinResult" style="font-size:64px; font-weight:bold; margin:16px 0;">-</div>
+        <button onclick="flipCoin()">Подбросить</button>
+    </div>
+    
+    <!-- Случайное число -->
+    <div class="card" style="text-align:center;">
+        <h3>Случайное число</h3>
+        <div style="display:flex; gap:8px; justify-content:center; align-items:center; margin:12px 0;">
+            <input id="minRand" type="number" value="1" style="width:80px; text-align:center;">
+            <span>—</span>
+            <input id="maxRand" type="number" value="100" style="width:80px; text-align:center;">
+        </div>
+        <div id="numberResult" style="font-size:48px; font-weight:bold; margin:12px 0; color:var(--accent);">-</div>
+        <button onclick="randomNumber()">Сгенерировать</button>
+    </div>
+</div>
+      <div id="tab-news" class="tab">
+    <h2>Новости</h2>
+    
+    <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <select id="newsSource" style="flex:1;" onchange="loadNews()">
+            <option value="habr">Хабр</option>
+            <option value="lenta">Лента.ру</option>
+            <option value="ria">РИА Новости</option>
+        </select>
+        <button onclick="loadNews()">Обновить</button>
+    </div>
+    
+    <div id="newsStatus" style="color:var(--text2); margin-bottom:12px;"></div>
+    <div id="newsList"></div>
+</div>
+        <div id="tab-weather" class="tab">
+    <h2>Погода</h2>
+    
+    <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <select id="weatherCity" style="flex:1;">
+            <option value="Moscow">Москва</option>
+            <option value="Saint+Petersburg">Санкт-Петербург</option>
+            <option value="Novosibirsk">Новосибирск</option>
+            <option value="London">Лондон</option>
+            <option value="New+York">Нью-Йорк</option>
+            <option value="Tokyo">Токио</option>
+        </select>
+        <button onclick="loadWeather()">Обновить</button>
+    </div>
+    
+    <div id="weatherStatus" style="color:var(--text2); margin-bottom:12px;"></div>
+    <div id="weatherResult"></div>
+</div>
+
+<div id="tab-admin" class="tab">
+    <h2>Админ-панель</h2>
+    
+    <div id="adminLogin">
+        <input id="adminPass" type="password" placeholder="Пароль" style="margin-bottom:10px;">
+        <button onclick="adminLogin()" style="width:100%;">Войти</button>
+    </div>
+    
+    <div id="adminPanel" style="display:none;">
+        <h3>Треки на модерации</h3>
+        <div id="moderationList"></div>
+    </div>
+</div>
+
+
+<div id="tab-info" class="tab">
+    <h2>Инструменты</h2>
+    
+    <div class="card">
+        <h3>Поделиться</h3>
+        <p style="color:var(--text2); margin-bottom:10px;">Отправить ссылку на ХАБ</p>
+        <button onclick="shareHab()" style="width:100%;">Поделиться</button>
+    </div>
+</div>
+
+        
+        
+        
+    </div>
+
+    <!-- Вкладки внизу -->
+    <!-- Вкладки внизу -->
+    <div id="tabs">
+        <button class="active" onclick="openTab('time')">
+            <span class="icon">T</span> Время
+        </button>
+        <button onclick="openTab('player')">
+            <span class="icon">P</span> Плеер
+        </button>
+        <button onclick="openTab('chat')">
+            <span class="icon">C</span> Чат
+        </button>
+        <button onclick="openTab('notes')">
+            <span class="icon">N</span> Заметки
+        </button>
+    <button onclick="toggleMoreMenu()">
+    <span class="icon">···</span> Ещё
+</button>
+    </div>
+
+<!-- Меню "Ещё" -->
+<div id="moreMenu" style="display:none; position:fixed; bottom:75px; right:10px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:8px; z-index:200; min-width:160px;">
+    <button onclick="openTab('timer'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Таймер</button>
+    <button onclick="openTab('random'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Рандом</button>
+    <button onclick="openTab('news'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Новости</button>
+    <button onclick="openTab('weather'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Погода</button>
+    <button onclick="openTab('info'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Инфо</button>
+    <button onclick="openTab('admin'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Админ</button>
+</div>
+
+    <script>
+        function openTab(name) {
+            // Скрыть все вкладки
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#tabs button').forEach(b => b.classList.remove('active'));
+
+            // Показать нужную вкладку
+            document.getElementById('tab-' + name).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+                // === ВРЕМЯ ===
+        function updateTime() {
+            let now = new Date();
+            document.getElementById('clock').textContent = 
+                now.getHours().toString().padStart(2, '0') + ':' + 
+                now.getMinutes().toString().padStart(2, '0') + ':' + 
+                now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('date').textContent = 
+                now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('weekday').textContent = 
+                now.toLocaleDateString('ru-RU', { weekday: 'long' });
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        let cityTimer;
+
+function updateCityTime() {
+    clearInterval(cityTimer);
+    let city = document.getElementById('citySelect').value;
+    
+    function show() {
+        let now = new Date();
+        let options = { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit',
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long'
+        };
+        
+        if (city === 'MSK') options.timeZone = 'Europe/Moscow';
+        else if (city === 'LON') options.timeZone = 'Europe/London';
+        else if (city === 'NYC') options.timeZone = 'America/New_York';
+        else if (city === 'TKY') options.timeZone = 'Asia/Tokyo';
+        else if (city === 'PEK') options.timeZone = 'Asia/Shanghai';
+        
+        let timeStr = now.toLocaleTimeString('ru-RU', options);
+        let dateStr = now.toLocaleDateString('ru-RU', options);
+        
+        document.getElementById('cityTime').textContent = timeStr;
+        document.getElementById('cityDate').textContent = dateStr;
+    }
+    
+    if (city === 'local') {
+        document.getElementById('cityTime').textContent = '';
+        document.getElementById('cityDate').textContent = '';
+        return;
+    }
+    
+    show();
+    cityTimer = setInterval(show, 1000);
+}
+
+// === ПЛЕЕР ===
+// === ПЛЕЕР ===
+let audio = new Audio();
+let playlist = [];
+let currentTrack = -1;
+let isPlaying = false;
+
+// IndexedDB
+let db;
+let dbReady = false;
+
+// Открываем базу
+let request = indexedDB.open('HabDB', 1);
+request.onupgradeneeded = function(e) {
+    db = e.target.result;
+    if (!db.objectStoreNames.contains('tracks')) {
+        db.createObjectStore('tracks', { keyPath: 'id', autoIncrement: true });
+    }
+};
+request.onsuccess = function(e) {
+    db = e.target.result;
+    dbReady = true;
+    loadTracksFromDB();
+};
+request.onerror = function() {
+    dbReady = false;
+    loadDefaultPlaylist();
+};
+
+// Загружаем треки из базы
+function loadTracksFromDB() {
+    let tx = db.transaction('tracks', 'readonly');
+    let store = tx.objectStore('tracks');
+    let req = store.getAll();
+    req.onsuccess = function() {
+        playlist = [];
+        req.result.forEach(track => {
+            playlist.push({ name: track.name, url: URL.createObjectURL(track.blob) });
+        });
+        renderPlaylist();
+        // Если есть предзагруженные треки — тоже добавляем
+        loadDefaultPlaylist();
+    };
+}
+
+// Сохраняем трек в базу
+function saveTrackToDB(file) {
+    if (!dbReady) return;
+    let tx = db.transaction('tracks', 'readwrite');
+    let store = tx.objectStore('tracks');
+    store.add({ name: file.name, blob: file });
+}
+
+// Предзагруженный плейлист
+let defaultPlaylist = [];
+function loadDefaultPlaylist() {
+    defaultPlaylist.forEach(track => {
+        if (!playlist.find(p => p.name === track.name)) {
+            playlist.push({ name: track.name, url: track.file });
+        }
+    });
+    renderPlaylist();
+}
+
+audio.ontimeupdate = function() {
+    if (audio.duration) {
+        let pct = (audio.currentTime / audio.duration) * 100;
+        document.getElementById('progressBar').value = pct;
+        document.getElementById('trackTime').textContent = 
+            formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+    }
+};
+
+audio.onended = function() {
+    nextTrack();
+};
+
+function formatTime(sec) {
+    let m = Math.floor(sec / 60);
+    let s = Math.floor(sec % 60);
+    return m + ':' + s.toString().padStart(2, '0');
+}
+
+function addTracks(files) {
+    for (let file of files) {
+        let url = URL.createObjectURL(file);
+        playlist.push({ name: file.name, url: url });
+        saveTrackToDB(file);
+    }
+    renderPlaylist();
+}
+
+function renderPlaylist() {
+    let ul = document.getElementById('playlist');
+    ul.innerHTML = '';
+    playlist.forEach((track, i) => {
+        let li = document.createElement('li');
+        li.textContent = (i + 1) + '. ' + track.name;
+        li.style.cssText = 'padding:12px; margin:4px 0; background:var(--card); border-radius:8px; cursor:pointer;';
+        if (i === currentTrack) li.style.border = '2px solid var(--accent)';
+        li.onclick = function() { playTrack(i); };
+        ul.appendChild(li);
+    });
+}
+
+function playTrack(i) {
+    if (i < 0 || i >= playlist.length) return;
+    currentTrack = i;
+    audio.src = playlist[i].url;
+    audio.play();
+    isPlaying = true;
+    document.getElementById('playBtn').textContent = '||';
+    document.getElementById('nowPlaying').textContent = playlist[i].name;
+    renderPlaylist();
+}
+
+function togglePlay() {
+    if (playlist.length === 0) return;
+    if (isPlaying) {
+        audio.pause();
+        document.getElementById('playBtn').textContent = '▶';
+    } else {
+        if (currentTrack < 0) playTrack(0);
+        else audio.play();
+        document.getElementById('playBtn').textContent = '||';
+    }
+    isPlaying = !isPlaying;
+}
+
+function nextTrack() {
+    if (playlist.length === 0) return;
+    let next = (currentTrack + 1) % playlist.length;
+    playTrack(next);
+}
+
+function prevTrack() {
+    if (playlist.length === 0) return;
+    let prev = (currentTrack - 1 + playlist.length) % playlist.length;
+    playTrack(prev);
+}
+
+function seek(val) {
+    if (audio.duration) {
+        audio.currentTime = (val / 100) * audio.duration;
+    }
+}
+
+function setVolume(val) {
+    audio.volume = val / 100;
+}
+
+// === ПРЕДЗАГРУЖЕННЫЕ ТРЕКИ (укажи свои) ===
+defaultPlaylist = [
+    { name: "We will rock you", file: "music/Kuin_-_Queen_-_We_Will_Rock_You.mp3" }
+];
+
+// === ЧАТ ===
+// === ЧАТ ===
+// === ЧАТ ===
+const SERVER_URL = 'https://hub-server-wku5.onrender.com';
+const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
+
+let chatNick = localStorage.getItem('chatNick') || '';
+let currentRoom = '';
+document.getElementById('chatNick').value = chatNick;
+
+function joinChat() {
+    let nick = document.getElementById('chatNick').value.trim();
+    let room = document.getElementById('roomSelect').value;
+    let password = document.getElementById('chatPassword').value.trim();
+    
+    if (!nick) return;
+    chatNick = nick;
+    currentRoom = room;
+    localStorage.setItem('chatNick', chatNick);
+    
+    // Временно слушаем ответ
+    let joined = false;
+    socket.once('message', function(msg) {
+        if (msg.type === 'system' && (msg.text.includes('Неверный пароль') || msg.text.includes('не существует'))) {
+            alert(msg.text);
+            return;
+        }
+        joined = true;
+        document.getElementById('chatLogin').style.display = 'none';
+        document.getElementById('chatRoom').style.display = 'block';
+        document.getElementById('roomLabel').textContent = 'Комната: ' + room;
+        document.getElementById('chatMessages').innerHTML = '';
+    });
+    
+    socket.emit('join', { name: chatNick, room: room, password: password });
+    
+    // Если за 1 секунду не пустило — сбрасываем
+    setTimeout(function() {
+        if (!joined) {
+            alert('Не удалось войти. Проверьте пароль.');
+        }
+    }, 1000);
+}
+
+function leaveChat() {
+    document.getElementById('chatLogin').style.display = 'block';
+    document.getElementById('chatRoom').style.display = 'none';
+    document.getElementById('chatMessages').innerHTML = '';
+    currentRoom = '';
+}
+
+socket.on('message', function(msg) {
+    let div = document.getElementById('chatMessages');
+    if (msg.type === 'system') {
+        div.innerHTML += `<div style="text-align:center; color:var(--text2); margin:4px 0;">${msg.text}</div>`;
+    } else {
+        let time = msg.time ? new Date(msg.time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '';
+        let isMe = msg.nick === chatNick;
+        div.innerHTML += `
+            <div style="margin:6px 0; padding:8px; background:${isMe ? 'var(--accent)' : 'var(--input-bg)'}; border-radius:8px; max-width:80%; ${isMe ? 'margin-left:auto;' : ''}">
+                <div style="font-size:12px; color:var(--text2);">${msg.nick || ''} ${time}</div>
+                <div style="margin-top:4px;">${msg.text || ''}</div>
+            </div>
+        `;
+    }
+    div.scrollTop = div.scrollHeight;
+});
+
+function sendMsg() {
+    let input = document.getElementById('chatInput');
+    let text = input.value.trim();
+    if (!text || !chatNick || !currentRoom) return;
+    
+    socket.emit('message', { nick: chatNick, text: text, time: Date.now(), room: currentRoom });
+    input.value = '';
+}
+
+function clearChatRoom() {
+    socket.emit('clear', { room: currentRoom });
+    document.getElementById('chatMessages').innerHTML = '';
+}
+
+// === ЗАМЕТКИ ===
+function loadNotes() {
+    let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+    let div = document.getElementById('notesList');
+    div.innerHTML = '';
+    
+    if (notes.length === 0) {
+        div.innerHTML = '<p style="color:var(--text2);">Нет заметок</p>';
+        return;
+    }
+    
+    notes.forEach((note, i) => {
+        let time = new Date(note.time).toLocaleString('ru-RU');
+        div.innerHTML += `
+            <div class="card" style="position:relative;">
+                <div style="font-size:12px; color:var(--text2); margin-bottom:8px;">${time}</div>
+                <div style="white-space:pre-wrap;">${note.text}</div>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button onclick="downloadNote(${i})" style="flex:1; background:var(--card); color:var(--accent); font-size:12px; min-height:32px;">Скачать</button>
+                    <button onclick="deleteNote(${i})" style="background:var(--danger); font-size:12px; padding:4px 8px; min-width:auto; min-height:32px;">X</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function saveNote() {
+    let input = document.getElementById('noteInput');
+    let text = input.value.trim();
+    if (!text) return;
+    
+    let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+    notes.unshift({ text: text, time: Date.now() });
+    localStorage.setItem('notes', JSON.stringify(notes));
+    input.value = '';
+    loadNotes();
+}
+
+function deleteNote(i) {
+    let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+    notes.splice(i, 1);
+    localStorage.setItem('notes', JSON.stringify(notes));
+    loadNotes();
+}
+
+loadNotes();
+
+// === ТАЙМЕР ===
+let timerMode = 'timer';
+let timerSeconds = 0;
+let timerInterval;
+let timerRunning = false;
+let timerPaused = false;
+
+function setMode(mode) {
+    timerMode = mode;
+    resetTimer();
+    document.getElementById('btnTimer').style.background = mode === 'timer' ? 'var(--accent)' : 'var(--card)';
+    document.getElementById('btnStopwatch').style.background = mode === 'stopwatch' ? 'var(--accent)' : 'var(--card)';
+    
+    document.getElementById('timerSetup').style.display = mode === 'timer' ? 'block' : 'none';
+    if (mode === 'stopwatch') startTimer();
+}
+
+function startTimer() {
+    if (timerMode === 'timer') {
+        let min = parseInt(document.getElementById('minInput').value) || 0;
+        let sec = parseInt(document.getElementById('secInput').value) || 0;
+        timerSeconds = min * 60 + sec;
+        if (timerSeconds <= 0) return;
+    } else {
+        if (timerPaused) timerPaused = false;
+        else timerSeconds = 0;
+    }
+    
+    timerRunning = true;
+    document.getElementById('timerSetup').style.display = 'none';
+    document.getElementById('timerDisplay').style.display = 'block';
+    document.getElementById('timerControls').style.display = 'flex';
+    document.getElementById('pauseBtn').textContent = 'Пауза';
+    
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if (timerMode === 'timer') {
+            if (timerSeconds <= 0) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+                alert('Время вышло!');
+                resetTimer();
+                return;
+            }
+            timerSeconds--;
+        } else {
+            timerSeconds++;
+        }
+        updateTimerDisplay();
+    }, 1000);
+    updateTimerDisplay();
+}
+
+function pauseTimer() {
+    if (timerPaused) {
+        timerPaused = false;
+        document.getElementById('pauseBtn').textContent = 'Пауза';
+        startTimer();
+    } else {
+        timerPaused = true;
+        clearInterval(timerInterval);
+        document.getElementById('pauseBtn').textContent = 'Продолжить';
+    }
+}
+
+function resetTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerPaused = false;
+    timerSeconds = 0;
+    document.getElementById('timerSetup').style.display = timerMode === 'timer' ? 'block' : 'none';
+    document.getElementById('timerDisplay').style.display = 'none';
+    document.getElementById('timerControls').style.display = 'none';
+    updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+    let m = Math.floor(timerSeconds / 60);
+    let s = timerSeconds % 60;
+    document.getElementById('timerDisplay').textContent = 
+        m.toString().padStart(2, '0') + ':' + s.toString().padStart(2, '0');
+}
+
+function toggleMoreMenu() {
+    let menu = document.getElementById('moreMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// Закрывать меню при клике вне его
+document.addEventListener('click', function(e) {
+    let menu = document.getElementById('moreMenu');
+    if (!e.target.closest('#moreMenu') && !e.target.closest('[onclick="toggleMoreMenu()"]')) {
+        menu.style.display = 'none';
+    }
+});
+
+// === РАНДОМ ===
+function rollDice() {
+    let result = Math.floor(Math.random() * 6) + 1;
+    document.getElementById('diceResult').textContent = result;
+}
+
+function flipCoin() {
+    let result = Math.random() < 0.5 ? 'Орёл' : 'Решка';
+    document.getElementById('coinResult').textContent = result;
+}
+
+function randomNumber() {
+    let min = parseInt(document.getElementById('minRand').value) || 1;
+    let max = parseInt(document.getElementById('maxRand').value) || 100;
+    if (min > max) { let t = min; min = max; max = t; }
+    let result = Math.floor(Math.random() * (max - min + 1)) + min;
+    document.getElementById('numberResult').textContent = result;
+}
+
+// === НОВОСТИ ===
+async function loadNews() {
+    let status = document.getElementById('newsStatus');
+    let list = document.getElementById('newsList');
+    
+    status.textContent = 'Загружаю...';
+    list.innerHTML = '';
+    
+    try {
+        // Таймаут 8 секунд для плохого интернета
+        let controller = new AbortController();
+        let timeout = setTimeout(() => controller.abort(), 8000);
+        
+        let apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://ria.ru/export/rss2/index.xml';
+        let response = await fetch(apiUrl, { signal: controller.signal });
+        clearTimeout(timeout);
+        
+        let data = await response.json();
+        
+        if (data.status === 'ok' && data.items) {
+            list.innerHTML = '';
+            data.items.slice(0, 10).forEach(item => {
+                let date = new Date(item.pubDate).toLocaleString('ru-RU', { 
+                    day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' 
+                });
+                list.innerHTML += `
+                    <div class="card">
+                        <a href="${item.link}" target="_blank" style="color:var(--accent); font-size:16px; font-weight:bold; text-decoration:none;">${item.title}</a>
+                        <div style="font-size:12px; color:var(--text2); margin:4px 0;">${date}</div>
+                        <div style="color:var(--text); margin-top:4px;">${item.description || ''}</div>
+                    </div>
+                `;
+            });
+            
+            localStorage.setItem('newsCache', JSON.stringify(data.items));
+            localStorage.setItem('newsDate', new Date().toISOString());
+            status.textContent = 'Обновлено: ' + new Date().toLocaleTimeString('ru-RU');
+        }
+    } catch (e) {
+        // Нет интернета или таймаут — кеш
+        let cached = JSON.parse(localStorage.getItem('newsCache') || '[]');
+        let cachedDate = localStorage.getItem('newsDate');
+        
+        if (cached.length > 0) {
+            list.innerHTML = '';
+            cached.slice(0, 10).forEach(item => {
+                let date = new Date(item.pubDate).toLocaleString('ru-RU', { 
+                    day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' 
+                });
+                list.innerHTML += `
+                    <div class="card" style="opacity:0.8;">
+                        <a href="${item.link}" target="_blank" style="color:var(--accent); font-size:16px; font-weight:bold; text-decoration:none;">${item.title}</a>
+                        <div style="font-size:12px; color:var(--text2); margin:4px 0;">${date}</div>
+                    </div>
+                `;
+            });
+            status.textContent = 'Нет интернета. Сохранено: ' + new Date(cachedDate).toLocaleString('ru-RU');
+        } else {
+            status.textContent = 'Нет интернета и нет кеша. Загрузите новости при хорошей связи.';
+        }
+    }
+}
+
+// Пробуем загрузить при открытии
+loadNews();
+
+loadDefaultPlaylist();
+
+// === ПОГОДА ===
+async function loadWeather() {
+    let city = document.getElementById('weatherCity').value;
+    let status = document.getElementById('weatherStatus');
+    let result = document.getElementById('weatherResult');
+    
+    status.textContent = 'Загружаю...';
+    result.innerHTML = '';
+    
+    // Координаты городов
+    let coords = {
+        'Moscow': '55.75,37.62',
+        'Saint+Petersburg': '59.94,30.31',
+        'Novosibirsk': '55.04,82.93',
+        'London': '51.51,-0.13',
+        'New+York': '40.71,-74.01',
+        'Tokyo': '35.68,139.76'
+    };
+    
+    try {
+        let controller = new AbortController();
+        let timeout = setTimeout(() => controller.abort(), 5000);
+        
+        let url = 'https://api.open-meteo.com/v1/forecast?latitude=' + coords[city].split(',')[0] + 
+                  '&longitude=' + coords[city].split(',')[1] + 
+                  '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,apparent_temperature,weather_code&timezone=Europe/Moscow';
+        
+        let response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeout);
+        
+        let data = await response.json();
+        let c = data.current;
+        
+        let temp = c.temperature_2m;
+        let humidity = c.relative_humidity_2m;
+        let wind = c.wind_speed_10m;
+        let feels = c.apparent_temperature;
+        let code = c.weather_code;
+        
+        // Коды погоды
+        let desc = 'Ясно';
+        if (code >= 1 && code <= 3) desc = 'Облачно';
+        if (code >= 45 && code <= 48) desc = 'Туман';
+        if (code >= 51 && code <= 67) desc = 'Дождь';
+        if (code >= 71 && code <= 77) desc = 'Снег';
+        if (code >= 80 && code <= 82) desc = 'Ливень';
+        if (code >= 95) desc = 'Гроза';
+        
+        result.innerHTML = `
+            <div class="card" style="text-align:center;">
+                <div style="font-size:16px; color:var(--text2);">${city.replace('+', ' ')}</div>
+                <div style="font-size:80px; font-weight:bold; color:var(--accent);">${temp}°C</div>
+                <div style="font-size:20px; color:var(--text);">${desc}</div>
+                <div style="font-size:14px; color:var(--text2); margin-top:4px;">Ощущается: ${feels}°C</div>
+                <div style="display:flex; justify-content:center; gap:20px; margin-top:16px; color:var(--text2);">
+                    <div>Влажность: ${humidity}%</div>
+                    <div>Ветер: ${wind} м/с</div>
+                </div>
+            </div>
+        `;
+        
+        localStorage.setItem('weatherCache', JSON.stringify({ temp, desc, humidity, wind, feels, city }));
+        localStorage.setItem('weatherDate', new Date().toISOString());
+        status.textContent = 'Обновлено: ' + new Date().toLocaleTimeString('ru-RU');
+        
+    } catch (e) {
+        let cached = JSON.parse(localStorage.getItem('weatherCache') || '{}');
+        if (cached.temp) {
+            result.innerHTML = `
+                <div class="card" style="text-align:center; opacity:0.8;">
+                    <div style="font-size:16px; color:var(--text2);">${cached.city || city}</div>
+                    <div style="font-size:80px; font-weight:bold; color:var(--accent);">${cached.temp}°C</div>
+                    <div style="font-size:20px; color:var(--text);">${cached.desc}</div>
+                    <div style="display:flex; justify-content:center; gap:20px; margin-top:16px; color:var(--text2);">
+                        <div>Влажность: ${cached.humidity}%</div>
+                        <div>Ветер: ${cached.wind} м/с</div>
+                    </div>
+                </div>
+            `;
+            status.textContent = 'Нет интернета. Сохранено ранее.';
+        } else {
+            status.textContent = 'Нет интернета и нет кеша.';
+        }
+    }
+}
+
+loadWeather();
+
+// === АДМИН-ПАНЕЛЬ ===
+const ADMIN_PASSWORD = 'admin123';
+let adminLogged = false;
+
+function adminLogin() {
+    let pass = document.getElementById('adminPass').value;
+    if (pass === ADMIN_PASSWORD) {
+        adminLogged = true;
+        document.getElementById('adminLogin').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadModeration();
+    } else {
+        alert('Неверный пароль');
+    }
+}
+
+function loadModeration() {
+    if (!adminLogged) return;
+    let list = document.getElementById('moderationList');
+    let pending = JSON.parse(localStorage.getItem('pendingTracks') || '[]');
+    
+    if (pending.length === 0) {
+        list.innerHTML = '<p style="color:var(--text2);">Нет треков на модерации.</p>';
+        return;
+    }
+    
+    list.innerHTML = '';
+    pending.forEach((track, i) => {
+        list.innerHTML += `
+            <div class="card">
+                <div style="font-weight:bold;">${track.name}</div>
+                <div style="font-size:14px; color:var(--text2);">От: ${track.from} | ${track.size}</div>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button onclick="downloadPending(${i})" style="flex:1; background:var(--card); color:var(--accent);">Скачать</button>
+                    <button onclick="Track(${i})" style="flex:1;">Одобрить</button>
+                    <button onclick="rejectTrack(${i})" style="flex:1; background:var(--danger);">Отклонить</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function approveTrack(i) {
+    let pending = JSON.parse(localStorage.getItem('pendingTracks') || '[]');
+    pending.splice(i, 1);
+    localStorage.setItem('pendingTracks', JSON.stringify(pending));
+    loadModeration();
+    alert('Трек одобрен! Скачай его и добавь в папку music/.');
+}
+
+function rejectTrack(i) {
+    let pending = JSON.parse(localStorage.getItem('pendingTracks') || '[]');
+    pending.splice(i, 1);
+    localStorage.setItem('pendingTracks', JSON.stringify(pending));
+    loadModeration();
+}
+
+function submitTrack() {
+    if (currentTrack < 0) {
+        alert('Сначала выбери трек в плейлисте.');
+        return;
+    }
+    
+    let pending = JSON.parse(localStorage.getItem('pendingTracks') || '[]');
+    
+    if (pending.length >= 1) {
+        alert('Уже есть трек на модерации. Дождись одобрения.');
+        return;
+    }
+    
+    let track = playlist[currentTrack];
+    
+    // Конвертируем MP3 в Base64
+    fetch(track.url)
+        .then(response => response.blob())
+        .then(blob => {
+            let reader = new FileReader();
+            reader.onload = function() {
+                let base64 = reader.result;
+                
+                // Проверяем размер (не больше 8 МБ в Base64)
+                if (base64.length > 8000000) {
+                    alert('Трек слишком большой. Максимум 6 МБ.');
+                    return;
+                }
+                
+                pending.push({
+                    name: track.name,
+                    from: chatNick || 'Аноним',
+                    size: Math.round(blob.size / 1024) + ' КБ',
+                    base64: base64
+                });
+                
+                localStorage.setItem('pendingTracks', JSON.stringify(pending));
+                alert('Трек отправлен на модерацию!');
+            };
+            reader.readAsDataURL(blob);
+        });
+}
+
+function downloadNote(i) {
+    let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+    let note = notes[i];
+    let text = note.text;
+    let date = new Date(note.time).toLocaleString('ru-RU');
+    let content = 'Заметка от ' + date + '\n' + '-'.repeat(30) + '\n\n' + text;
+    
+    let blob = new Blob([content], { type: 'text/plain' });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = 'zametka_' + (i + 1) + '.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function downloadPending(i) {
+    let pending = JSON.parse(localStorage.getItem('pendingTracks') || '[]');
+    let track = pending[i];
+    
+    let a = document.createElement('a');
+    a.href = track.base64;
+    a.download = track.name;
+    a.click();
+}
+rov
+
+function loadDefaultPlaylist() {
+    defaultPlaylist.forEach(track => {
+        playlist.push({
+            name: track.name,
+            url: track.file
+        });
+    });
+    renderPlaylist();
+}
+
+// === WEB API ===
+// Экран не гаснет
+let wakeLock = null;
+async function keepAwake() {
+    try {
+        wakeLock = await navigator.wakeLock.request('screen');
+    } catch (e) {}
+}
+keepAwake();
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') keepAwake();
+});
+
+// Заряд батареи
+async function showBattery() {
+    try {
+        let battery = await navigator.getBattery();
+        let level = Math.round(battery.level * 100);
+        let batteryDiv = document.createElement('div');
+        batteryDiv.style.cssText = 'position:fixed; top:8px; right:12px; font-size:12px; color:var(--text2); z-index:200;';
+        batteryDiv.textContent = level + '%';
+        document.body.appendChild(batteryDiv);
+        
+        battery.onlevelchange = () => {
+            batteryDiv.textContent = Math.round(battery.level * 100) + '%';
+        };
+    } catch (e) {}
+}
+showBattery();
+
+// Поделиться
+function shareHab() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'ХАБ',
+            text: 'Заходи в ХАБ — мультимедийный портал!',
+            url: window.location.href
+        });
+    } else {
+        alert('Скопируйте ссылку: ' + window.location.href);
+    }
+}
+
+
+    </script>
+</body>
+</html>
