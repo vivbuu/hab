@@ -1266,7 +1266,23 @@ function shareHab() {
     }
 }
 
-
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+        // Запрашиваем разрешение на уведомления
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+        if (Notification.permission === 'granted') {
+            reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array('BOyrNjJZ4Ou2WNOrVb0TDS/HIJITBeovnWlR26mNNbHtq5TNlYYlU0ZQB7+jsE4Eggh+VQsf0sDHMp4WYKXaH9c=')
+            }).then(function(sub) {
+                socket.emit('subscribe', { subscription: JSON.parse(JSON.stringify(sub)) });
+            });
+        }
+    });
+}
 
 function urlBase64ToUint8Array(base64String) {
     let padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -1278,32 +1294,6 @@ function urlBase64ToUint8Array(base64String) {
     }
     return outputArray;
 }
-
-
-const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
-
-// PWA Service Worker
-if ('serviceWorker' in navigator) {
-	console.log('SW: START');
-    navigator.serviceWorker.register('sw.js').then(function(reg) {
-		console.log('SW: START2ЦВЫ');
-        // Запрашиваем разрешение на уведомления
-        if (Notification.permission === 'default') {
-            Notification.requestPermission();
-        }
-        if (Notification.permission === 'granted') {
-			console.log('SW: START2ВАВАВААВАВААВАВАВАВЦВЫ');
-            reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array('BOyrNjJZ4Ou2WNOrVb0TDS/HIJITBeovnWlR26mNNbHtq5TNlYYlU0ZQB7+jsE4Eggh+VQsf0sDHMp4WYKXaH9c=')
-            }).then(function(sub) {
-                socket.emit('subscribe', { subscription: JSON.parse(JSON.stringify(sub)) });
-            });
-        }
-    });
-}
-
-
 
 
 function toggleNotify() {
