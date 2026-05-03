@@ -758,6 +758,14 @@ function clearChatRoom() {
     document.getElementById('chatMessages').innerHTML = '';
 }
 
+function leaveChat() {
+    document.getElementById('chatLogin').style.display = 'block';
+    document.getElementById('chatRoom').style.display = 'none';
+    document.getElementById('chatMessages').innerHTML = '';
+    currentRoom = '';
+}
+
+
 // === ЗАМЕТКИ ===
 function loadNotes() {
     let notes = JSON.parse(localStorage.getItem('notes') || '[]');
