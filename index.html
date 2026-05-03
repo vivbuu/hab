@@ -765,6 +765,8 @@ if ('Notification' in window && Notification.permission === 'default') {
 document.getElementById('chatNick').value = chatNick;
 
 function joinChat() {
+	document.getElementById('chatNick').value = localStorage.getItem('chatNick') || '';
+	
     let nick = document.getElementById('chatNick').value.trim();
     let room = document.getElementById('roomSelect').value;
     let password = document.getElementById('chatPassword').value.trim();
@@ -783,7 +785,7 @@ function joinChat() {
 }
  
 
-socket.on('message', function(msg) {
+socket.on('message', function(msg) {zzzzzzzzzzzzzzzzz
 	 if (msg.room && msg.room !== currentRoom) return;
     let div = document.getElementById('chatMessages');
     if (msg.type === 'system') {
