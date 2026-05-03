@@ -696,6 +696,7 @@ const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
 
 let chatNick = localStorage.getItem('chatNick') || '';
 let currentRoom = '';
+let notifyOn = true;
 document.getElementById('chatNick').value = chatNick;
 
 function joinChat() {
@@ -1215,7 +1216,7 @@ function loadDefaultPlaylist() {
 // === WEB API ===
 // Экран не гаснет
 let wakeLock = null;
-let notifyOn = true;
+
 
 async function keepAwake() {
     try {
@@ -1264,7 +1265,7 @@ if ('serviceWorker' in navigator) {
 function toggleNotify() {
     notifyOn = !notifyOn;
     let btn = document.getElementById('notifyBtn');
-    btn.textContent = notifyOn ? 'Звук вкл' : 'Звук выкл';
+    if (btn) btn.textContent = notifyOn ? 'Звук вкл' : 'Звук выкл';
 }
 
     </script>
