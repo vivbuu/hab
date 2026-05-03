@@ -425,7 +425,7 @@
     
     <div class="card">
         <h3>Версия</h3>
-        <p style="color:var(--accent); font-weight:bold;">v1.2.3 - push BETA</p>
+        <p style="color:var(--accent); font-weight:bold;">v1.3.0 - release notofications</p>
     </div>
     
     <div class="card">
@@ -697,6 +697,10 @@ const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
 let chatNick = localStorage.getItem('chatNick') || '';
 let currentRoom = '';
 let notifyOn = true;
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
 document.getElementById('chatNick').value = chatNick;
 
 function joinChat() {
@@ -738,6 +742,12 @@ socket.on('message', function(msg) {
     try { new Audio('beep.wav').play(); } catch(e) {}
     // Вибрация
     if (navigator.vibrate) navigator.vibrate(200);
+            if (Notification.permission === 'granted' && document.hidden) {
+            new Notification('ХАБ', {
+                body: msg.nick + ': ' + msg.text,
+                icon: 'icon512.png'
+            });
+        }
     // Мигание заголовка
     let oldTitle = document.title;
     document.title = '(Новое!) ХАБ';
