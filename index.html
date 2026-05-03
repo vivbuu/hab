@@ -425,7 +425,7 @@
     
     <div class="card">
         <h3>Версия</h3>
-        <p style="color:var(--accent); font-weight:bold;">v1.1 - PWA release</p>
+        <p style="color:var(--accent); font-weight:bold;">v1.2.3 - push BETA</p>
     </div>
     
     <div class="card">
@@ -718,6 +718,7 @@ function joinChat() {
 }
 
 socket.on('message', function(msg) {
+	 if (msg.room && msg.room !== currentRoom) return;
     let div = document.getElementById('chatMessages');
     if (msg.type === 'system') {
         div.innerHTML += `<div style="text-align:center; color:var(--text2); margin:4px 0;">${msg.text}</div>`;
