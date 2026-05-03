@@ -709,16 +709,32 @@ function joinChat() {
     let password = document.getElementById('chatPassword').value.trim();
     
     if (!nick) return;
-    chatNick = nick;
-    currentRoom = room;
-    localStorage.setItem('chatNick', chatNick);
     
-    document.getElementById('chatLogin').style.display = 'none';
-    document.getElementById('chatRoom').style.display = 'block';
-    document.getElementById('roomLabel').textContent = 'Комната: ' + room;
-    document.getElementById('chatMessages').innerHTML = '';
+    let allowed = false;
     
-    socket.emit('join', { name: chatNick, room: room, password: password });
+    socket.once('message', function(msg) {
+        if (msg.type === 'system' && (msg.text.includes('Неверный пароль') || msg.text.includes('не существует'))) {
+            alert(msg.text);
+            return;
+        }
+        // Если нет ошибки — входим
+        allowed = true;
+        chatNick = nick;
+        currentRoom = room;
+        localStorage.setItem('chatNick', chatNick);
+        document.getElementById('chatLogin').style.display = 'none';
+        document.getElementById('chatRoom').style.display = 'block';
+        document.getElementById('roomLabel').textContent = 'Комната: ' + room;
+        document.getElementById('chatMessages').innerHTML = '';
+    });
+    
+    socket.emit('join', { name: nick, room: room, password: password });
+    
+    setTimeout(function() {
+        if (!allowed) {
+            alert('Не удалось войти. Проверьте пароль.');
+        }
+    }, 2000);
 }
 
 socket.on('message', function(msg) {
