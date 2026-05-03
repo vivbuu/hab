@@ -1268,12 +1268,15 @@ function shareHab() {
 
 // PWA Service Worker
 if ('serviceWorker' in navigator) {
+	console.log('SW: START');
     navigator.serviceWorker.register('sw.js').then(function(reg) {
+		console.log('SW: REGISTERED');
         // Запрашиваем разрешение на уведомления
         if (Notification.permission === 'default') {
             Notification.requestPermission();
         }
         if (Notification.permission === 'granted') {
+			console.log('SW: SUBSCRIBING');
             reg.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array('BOyrNjJZ4Ou2WNOrVb0TDS/HIJITBeovnWlR26mNNbHtq5TNlYYlU0ZQB7+jsE4Eggh+VQsf0sDHMp4WYKXaH9c=')
