@@ -374,6 +374,13 @@
     </div>
     
     <div id="adminPanel" style="display:none;">
+        <h3>Ожидают одобрения</h3>
+        <div id="pendingList"></div>
+        <h3>Одобрены</h3>
+        <div id="approvedList"></div>
+        <h3>Забанены</h3>
+        <div id="bannedList"></div>
+        <hr>
         <h3>Треки на модерации</h3>
         <div id="moderationList"></div>
     </div>
@@ -1163,7 +1170,8 @@ async function loadWeather() {
 loadWeather();
 
 // === АДМИН-ПАНЕЛЬ ===
-const ADMIN_PASSWORD = 'admin123';
+// === АДМИН-ПАНЕЛЬ ===
+const ADMIN_PASSWORD = 'admin_logg';
 let adminLogged = false;
 
 function adminLogin() {
@@ -1172,10 +1180,33 @@ function adminLogin() {
         adminLogged = true;
         document.getElementById('adminLogin').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
+        socket.emit('get_lists');
         loadModeration();
     } else {
         alert('Неверный пароль');
     }
+}
+
+socket.on('admin_lists', function(data) {
+    document.getElementById('pendingList').innerHTML = data.pending.map(n => 
+        `<div class="card"><span>${n}</span> <button onclick="approveUser('${n}')">Одобрить</button> <button onclick="banUser('${n}')" style="background:var(--danger);">Бан</button></div>`
+    ).join('');
+    document.getElementById('approvedList').innerHTML = data.approved.map(n => 
+        `<div class="card"><span>${n}</span> <button onclick="banUser('${n}')" style="background:var(--danger);">Бан</button></div>`
+    ).join('');
+    document.getElementById('bannedList').innerHTML = data.banned.map(n => 
+        `<div class="card"><span>${n}</span></div>`
+    ).join('');
+});
+
+function approveUser(name) {
+    socket.emit('admin_approve', { name: name });
+    setTimeout(() => socket.emit('get_lists'), 500);
+}
+
+function banUser(name) {
+    socket.emit('admin_ban', { name: name });
+    setTimeout(() => socket.emit('get_lists'), 500);
 }
 
 function loadModeration() {
