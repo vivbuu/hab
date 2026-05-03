@@ -261,6 +261,7 @@
         <div style="display:flex; gap:8px;">
             <input id="chatInput" type="text" placeholder="Сообщение..." style="flex:1;" onkeydown="if(event.key==='Enter')sendMsg()">
             <button onclick="sendMsg()">Отпр</button>
+            <button onclick="toggleNotify()" id="notifyBtn" style="background:var(--card);">Звук</button>
             <button onclick="clearChatRoom()" style="background:var(--danger);">Очистить</button>
         </div>
     </div>
@@ -753,6 +754,16 @@ socket.on('message', function(msg) {
         `;
     }
     div.scrollTop = div.scrollHeight;
+    if (msg.nick !== chatNick && notifyOn) {
+    // Звук
+    try { new Audio('beep.wav').play(); } catch(e) {}
+    // Вибрация
+    if (navigator.vibrate) navigator.vibrate(200);
+    // Мигание заголовка
+    let oldTitle = document.title;
+    document.title = '(Новое!) ХАБ';
+    setTimeout(function() { document.title = oldTitle; }, 3000);
+}
 });
 
 function sendMsg() {
@@ -1227,6 +1238,8 @@ function loadDefaultPlaylist() {
 // === WEB API ===
 // Экран не гаснет
 let wakeLock = null;
+let notifyOn = true;
+
 async function keepAwake() {
     try {
         wakeLock = await navigator.wakeLock.request('screen');
@@ -1269,6 +1282,11 @@ function shareHab() {
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
+}
+
+function toggleNotify() {
+    notifyOn = !notifyOn;
+    document.getElementById('notifyBtn').textContent = notifyOn ? 'Звук' : 'Без звука';
 }
 
 
