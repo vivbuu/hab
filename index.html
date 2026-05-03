@@ -708,30 +708,13 @@ function joinChat() {
     currentRoom = room;
     localStorage.setItem('chatNick', chatNick);
     
-    // Временно слушаем ответ
-    let joined = false;
-    socket.once('message', function(msg) {
-        if (msg.type === 'system' && (msg.text.includes('Неверный пароль') || msg.text.includes('не существует'))) {
-            alert(msg.text);
-            return;
-        }
-        joined = true;
-        document.getElementById('chatLogin').style.display = 'none';
-        document.getElementById('chatRoom').style.display = 'block';
-        document.getElementById('roomLabel').textContent = 'Комната: ' + room;
-        document.getElementById('chatMessages').innerHTML = '';
-    });
+    document.getElementById('chatLogin').style.display = 'none';
+    document.getElementById('chatRoom').style.display = 'block';
+    document.getElementById('roomLabel').textContent = 'Комната: ' + room;
+    document.getElementById('chatMessages').innerHTML = '';
     
     socket.emit('join', { name: chatNick, room: room, password: password });
-    
-    // Если за 1 секунду не пустило — сбрасываем
-    setTimeout(function() {
-        if (!joined) {
-            alert('Не удалось войти. Проверьте пароль.');
-        }
-    }, 1000);
 }
-
 function leaveChat() {
     document.getElementById('chatLogin').style.display = 'block';
     document.getElementById('chatRoom').style.display = 'none';
