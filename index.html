@@ -785,7 +785,7 @@ function joinChat() {
 }
  
 
-socket.on('message', function(msg) {zzzzzzzzzzzzzzzzz
+socket.on('message', function(msg) {
 	 if (msg.room && msg.room !== currentRoom) return;
     let div = document.getElementById('chatMessages');
     if (msg.type === 'system') {
