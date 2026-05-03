@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ХАБ</title>
     <link rel="icon" type="image/png" href="icon512.png">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4CAF50">
 <link rel="apple-touch-icon" href="icon512.png">
+
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         :root {
@@ -1262,6 +1265,10 @@ function shareHab() {
     } else {
         alert('Скопируйте ссылку: ' + window.location.href);
     }
+}
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
 }
 
 

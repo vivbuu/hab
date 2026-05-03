@@ -1,0 +1,15 @@
+{
+    "name": "ХАБ",
+    "short_name": "ХАБ",
+    "start_url": "/hab/",
+    "display": "standalone",
+    "background_color": "#0d1117",
+    "theme_color": "#4CAF50",
+    "icons": [
+        {
+            "src": "icon512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
