@@ -261,7 +261,7 @@
         <div style="display:flex; gap:8px;">
             <input id="chatInput" type="text" placeholder="Сообщение..." style="flex:1;" onkeydown="if(event.key==='Enter')sendMsg()">
             <button onclick="sendMsg()">Отпр</button>
-            <button onclick="toggleNotify()" id="notifyBtn" style="background:var(--card);">Звук</button>
+<button onclick="toggleNotify()" id="notifyBtn" style="background:var(--card);">Звук вкл</button>
             <button onclick="clearChatRoom()" style="background:var(--danger);">Очистить</button>
         </div>
     </div>
@@ -714,12 +714,6 @@ function joinChat() {
     document.getElementById('chatMessages').innerHTML = '';
     
     socket.emit('join', { name: chatNick, room: room, password: password });
-}
-function leaveChat() {
-    document.getElementById('chatLogin').style.display = 'block';
-    document.getElementById('chatRoom').style.display = 'none';
-    document.getElementById('chatMessages').innerHTML = '';
-    currentRoom = '';
 }
 
 socket.on('message', function(msg) {
@@ -1269,9 +1263,9 @@ if ('serviceWorker' in navigator) {
 
 function toggleNotify() {
     notifyOn = !notifyOn;
-    document.getElementById('notifyBtn').textContent = notifyOn ? 'Звук' : 'Без звука';
+    let btn = document.getElementById('notifyBtn');
+    btn.textContent = notifyOn ? 'Звук вкл' : 'Звук выкл';
 }
-
 
     </script>
 </body>
