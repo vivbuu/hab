@@ -1185,8 +1185,8 @@ socket.on('admin_lists', function(data) {
     document.getElementById('approvedList').innerHTML = data.approved.map(n => 
         `<div class="card"><span>${n}</span> <button onclick="banUser('${n}')" style="background:var(--danger);">Бан</button></div>`
     ).join('');
-    document.getElementById('bannedList').innerHTML = data.banned.map(n => 
-        `<div class="card"><span>${n}</span></div>`
+        document.getElementById('bannedList').innerHTML = data.banned.map(n => 
+        `<div class="card"><span>${n}</span> <button onclick="unbanUser('${n}')" style="background:var(--accent);">Разбан</button></div>`
     ).join('');
 });
 
@@ -1400,6 +1400,12 @@ function toggleNotify() {
     let btn = document.getElementById('notifyBtn');
     if (btn) btn.textContent = notifyOn ? 'Звук вкл' : 'Звук выкл';
 }
+
+function unbanUser(name) {
+    socket.emit('admin_unban', { name: name });
+    setTimeout(() => socket.emit('get_lists'), 500);
+}
+
 
     </script>
 </body>
