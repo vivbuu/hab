@@ -766,14 +766,13 @@ if ('Notification' in window && Notification.permission === 'default') {
 document.getElementById('chatNick').value = chatNick;
 
 function joinChat() {
-    let savedNick = localStorage.getItem('chatNick') || '';
-    document.getElementById('chatNick').value = savedNick;
-    
-    let nick = document.getElementById('chatNick').value.trim();
+    let nickInput = document.getElementById('chatNick');
+    let nick = nickInput.value.trim();
     let room = document.getElementById('roomSelect').value;
     let password = document.getElementById('chatPassword').value.trim();
     
     if (!nick) return;
+    
     chatNick = nick;
     currentRoom = room;
     localStorage.setItem('chatNick', chatNick);
