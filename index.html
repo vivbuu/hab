@@ -435,7 +435,7 @@
     <div class="card">
         <h3>Версия</h3>
         <p style="color:var(--accent); font-weight:bold;">
-			v1.4.6 - Новая система модерации трекоsahfв<br>
+			v1.4.6 - Новая система модерации треков<br>
 			v1.4.5 - Измененна система модерации треков BETA<br>
 			v1.4.4 - Функция удаления треков в плеере<br>
             v1.4.3 - Сохранение состояния ников<br>
@@ -1234,38 +1234,41 @@ function submitTrack() {
     let track = playlist[currentTrack];
     
     if (!track.url.startsWith('blob:')) {
-        socket.emit('submit_track', { name: track.name, from: chatNick || 'Аноним', size: 'дефолт' });
+        socket.emit('submit_track', {
+            track: { name: track.name, from: chatNick || 'Аноним', size: 'дефолт' }
+        });
         alert('Трек отправлен!');
         return;
     }
     
     let reader = new FileReader();
-   reader.onload = function() {
-    alert('READER OK, длина: ' + reader.result.length);
-	console.log('Socket exists:', !!socket);
-	console.log('Socket connected:', socket.connected);
-    socket.emit('submit_track', {
-        track: {
-            name: track.name,
-            from: chatNick || 'Аноним',
-            size: '? КБ',
-            base64: reader.result
-        }
-    });
-};
+    let base64data = null;
+    
+    reader.onload = function() {
+        base64data = reader.result;
+        // Вызываем отправку ПОСЛЕ чтения
+        sendTrackToServer(track.name, base64data);
+    };
     reader.onerror = function() {
-        alert('READER ERROR');
+        alert('Ошибка чтения файла.');
     };
     
     fetch(track.url)
         .then(function(r) { return r.blob(); })
-        .then(function(b) {
-            alert('BLOB OK, размер: ' + b.size);
-            reader.readAsDataURL(b);
-        })
-        .catch(function() {
-            alert('FETCH ERROR');
-        });
+        .then(function(b) { reader.readAsDataURL(b); })
+        .catch(function() { alert('Ошибка загрузки.'); });
+}
+
+function sendTrackToServer(name, base64) {
+    socket.emit('submit_track', {
+        track: {
+            name: name,
+            from: chatNick || 'Аноним',
+            size: Math.round(base64.length / 1024) + ' КБ',
+            base64: base64
+        }
+    });
+    alert('Трек отправлен на модерацию!');
 }
 	
 
