@@ -234,6 +234,7 @@
         <h3>Плейлист</h3>
         <div style="margin-top:16px;">
     <button onclick="submitTrack()" style="width:100%; background:var(--card); color:var(--accent);">Отправить трек на модерацию</button>
+	<button onclick="socket.emit('ping_test')" style="width:100%; background:var(--card); color:var(--text);">PING</button>
 </div>
         <ul id="playlist" style="list-style:none; padding:0;"></ul>
     </div>
@@ -434,7 +435,6 @@
     <div class="card">
         <h3>Версия</h3>
         <p style="color:var(--accent); font-weight:bold;">
-			v1.4.6 - Полностью измененна система модерации треков<br>
 			v1.4.5 - Измененна система модерации треков BETA<br>
 			v1.4.4 - Функция удаления треков в плеере<br>
             v1.4.3 - Сохранение состояния ников<br>
@@ -1474,7 +1474,10 @@ function downloadTrackFile(name) {
 socket.on('track_submitted', function(data) {
     alert('Трек ' + data.name + ' получен сервером!');
 });
-		
+
+socket.on('pong_test', function(data) {
+    alert(data.msg);
+});
 		
     </script>
 </body>
