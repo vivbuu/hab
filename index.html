@@ -435,7 +435,7 @@
     <div class="card">
         <h3>Версия</h3>
         <p style="color:var(--accent); font-weight:bold;">
-			v1.4.5 - Измененна система модерации треков BяzETA<br>
+			v1.4.5 - Измененна система модерации треков BETA<br>
 			v1.4.4 - Функция удаления треков в плеере<br>
             v1.4.3 - Сохранение состояния ников<br>
 			v1.4.2 - Измененна технология модерации<br>
@@ -1232,12 +1232,52 @@ function submitTrack() {
         return;
     }
     let track = playlist[currentTrack];
-    socket.emit('submit_track', {
-        name: track.name,
-        from: chatNick || 'Аноним',
-        size: '0 КБ'
-    });
-    alert('Трек отправлен на модерацию!');
+    
+    // Маленькие файлы — сразу отправляем с base64
+    // Большие — отправляем без base64 (скачать нельзя, но трек видно)
+    if (track.url.startsWith('blob:')) {
+        fetch(track.url)
+            .then(response => response.blob())
+            .then(blob => {
+                if (blob.size > 6000000) {
+                    // Слишком большой — отправляем без файла
+                    socket.emit('submit_track', {
+                        name: track.name,
+                        from: chatNick || 'Аноним',
+                        size: Math.round(blob.size / 1024) + ' КБ'
+                    });
+                    alert('Трек отправлен (без файла — слишком большой).');
+                } else {
+                    let reader = new FileReader();
+                    reader.onload = function() {
+                        socket.emit('submit_track', {
+                            name: track.name,
+                            from: chatNick || 'Аноним',
+                            size: Math.round(blob.size / 1024) + ' КБ',
+                            base64: reader.result
+                        });
+                        alert('Трек отправлен на модерацию!');
+                    };
+                    reader.readAsDataURL(blob);
+                }
+            })
+            .catch(function() {
+                socket.emit('submit_track', {
+                    name: track.name,
+                    from: chatNick || 'Аноним',
+                    size: '? КБ'
+                });
+                alert('Трек отправлен (без файла — ошибка чтения).');
+            });
+    } else {
+        // Предзагруженный трек (из music/) — отправляем без base64
+        socket.emit('submit_track', {
+            name: track.name,
+            from: chatNick || 'Аноним',
+            size: 'дефолт'
+        });
+        alert('Трек отправлен на модерацию!');
+    }
 }
 	
 
