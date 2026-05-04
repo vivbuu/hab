@@ -758,7 +758,7 @@ defaultPlaylist = [
 // === ЧАТ ===
 // === ЧАТ ===
 const SERVER_URL = 'https://hub-server-wku5.onrender.com';
-const socket = io(SERVER_URL, { transports: ['polling'] });
+const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
 
 let chatNick = localStorage.getItem('chatNick') || '';
 let currentRoom = '';
