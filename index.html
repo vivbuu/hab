@@ -1470,6 +1470,11 @@ function downloadTrackFile(name) {
         }
     });
 }
+
+socket.on('track_submitted', function(data) {
+    alert('Трек ' + data.name + ' получен сервером!');
+});
+		
 		
     </script>
 </body>
