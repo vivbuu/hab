@@ -1485,17 +1485,18 @@ function changeNick() {
 function downloadTrackFile(name) {
     socket.emit('get_track_file', { name: name });
     socket.once('track_file', function(data) {
-        alert(JSON.stringify(data));
+        if (data && data.base64 && data.base64.length > 100) {
+            let a = document.createElement('a');
+            a.href = data.base64;
+            a.download = data.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } else {
+            alert('Файл не найден. Длина: ' + (data && data.base64 ? data.base64.length : 'нет'));
+        }
     });
 }
-
-socket.on('track_submitted', function(data) {
-    alert('Трек ' + data.name + ' получен сервером!');
-});
-
-socket.on('pong_test', function(data) {
-    alert(data.msg);
-});
 		
     </script>
 </body>
