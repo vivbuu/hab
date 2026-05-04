@@ -1232,11 +1232,32 @@ function submitTrack() {
         return;
     }
     let track = playlist[currentTrack];
-	console.log('Отправляю трек:', track.name, 'base64 длина:', base64.length);
-    socket.emit('submit_track', {
-        track: { name: track.name, from: chatNick || 'Аноним' }
-    });
-    alert('Трек отправлен на модерацию!');
+    
+    fetch(track.url)
+        .then(response => response.blob())
+        .then(blob => {
+            let reader = new FileReader();
+            reader.onload = function() {
+                let base64 = reader.result;
+                if (base64.length > 8000000) {
+                    alert('Трек слишком большой. Максимум 6 МБ.');
+                    return;
+                }
+                socket.emit('submit_track', {
+                    track: { 
+                        name: track.name, 
+                        from: chatNick || 'Аноним',
+                        size: Math.round(blob.size / 1024) + ' КБ',
+                        base64: base64
+                    }
+                });
+                alert('Трек отправлен на модерацию!');
+            };
+            reader.readAsDataURL(blob);
+        })
+        .catch(function() {
+            alert('Ошибка чтения файла. Попробуйте другой трек.');
+        });
 }
 	
 
