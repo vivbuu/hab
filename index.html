@@ -946,10 +946,27 @@ function startTimer() {
 
 function pauseTimer() {
     if (timerPaused) {
+        // Продолжить
         timerPaused = false;
         document.getElementById('pauseBtn').textContent = 'Пауза';
-        startTimer();
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if (timerMode === 'timer') {
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    timerRunning = false;
+                    alert('Время вышло!');
+                    resetTimer();
+                    return;
+                }
+                timerSeconds--;
+            } else {
+                timerSeconds++;
+            }
+            updateTimerDisplay();
+        }, 1000);
     } else {
+        // Пауза
         timerPaused = true;
         clearInterval(timerInterval);
         document.getElementById('pauseBtn').textContent = 'Продолжить';
