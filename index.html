@@ -435,7 +435,7 @@
     <div class="card">
         <h3>Версия</h3>
         <p style="color:var(--accent); font-weight:bold;">
-			v1.4.5 - Измененна система модерации треков BETA<br>
+			v1.4.5 - Измененна система модерации треков zzBETA<br>
 			v1.4.4 - Функция удаления треков в плеере<br>
             v1.4.3 - Сохранение состояния ников<br>
 			v1.4.2 - Измененна технология модерации<br>
@@ -1482,16 +1482,7 @@ function changeNick() {
 function downloadTrackFile(name) {
     socket.emit('get_track_file', { name: name });
     socket.once('track_file', function(data) {
-        if (data && data.base64 && data.base64.length > 100) {
-            let a = document.createElement('a');
-            a.href = data.base64;
-            a.download = data.name;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        } else {
-            alert('Файл не найден. Длина base64: ' + (data ? data.base64 ? data.base64.length : 'нет' : 'нет данных'));
-        }
+        alert(JSON.stringify(data));
     });
 }
 
