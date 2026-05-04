@@ -1414,6 +1414,35 @@ function changeNick() {
     currentRoom = '';
 }
 
+	function renderPlaylist() {
+    let ul = document.getElementById('playlist');
+    ul.innerHTML = '';
+    playlist.forEach((track, i) => {
+        let li = document.createElement('li');
+        li.style.cssText = 'padding:12px; margin:4px 0; background:var(--card); border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;';
+        if (i === currentTrack) li.style.border = '2px solid var(--accent)';
+        
+        let span = document.createElement('span');
+        span.textContent = (i + 1) + '. ' + track.name;
+        span.style.flex = '1';
+        span.onclick = function() { playTrack(i); };
+        
+        let delBtn = document.createElement('button');
+        delBtn.textContent = 'X';
+        delBtn.style.cssText = 'background:var(--danger); min-width:32px; min-height:32px; padding:4px 8px; font-size:12px; margin-left:8px;';
+        delBtn.onclick = function(e) {
+            e.stopPropagation();
+            playlist.splice(i, 1);
+            if (currentTrack === i) { currentTrack = -1; audio.pause(); isPlaying = false; }
+            if (currentTrack > i) currentTrack--;
+            renderPlaylist();
+        };
+        
+        li.appendChild(span);
+        li.appendChild(delBtn);
+        ul.appendChild(li);
+    });
+			}
 
     </script>
 </body>
