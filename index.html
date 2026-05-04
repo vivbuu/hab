@@ -435,7 +435,7 @@
     <div class="card">
         <h3>Версия</h3>
         <p style="color:var(--accent); font-weight:bold;">
-			v1.4.5 - Измененна система модерации треков BETAzxc<br>
+			v1.4.5 - Измененна система модерации треков BETA<br>
 			v1.4.4 - Функция удаления треков в плеере<br>
             v1.4.3 - Сохранение состояния ников<br>
 			v1.4.2 - Измененна технология модерации<br>
@@ -1231,54 +1231,36 @@ function submitTrack() {
         return;
     }
     let track = playlist[currentTrack];
-
-	console.log('URL:', track.url);
-	console.log('Starts with blob:', track.url.startsWith('blob:'));
-    if (track.url.startsWith('blob:')) {
-        fetch(track.url)
-            .then(response => response.blob())
-            .then(blob => {
-                if (false) {
-                    socket.emit('submit_track', {
-                        name: track.name,
-                        from: chatNick || 'Аноним',
-                        size: Math.round(blob.size / 1024) + ' КБ'
-                    });
-                    alert('Трек отправлен (без файла — слишком большой).');
-                } else {
-                    let reader = new FileReader();
-					console.log('Base64 length:', reader.result.length);
-                    reader.onload = function() {
-						console.log('Reader result exists:', !!reader.result);
-						console.log('Result type:', typeof reader.result);
-						console.log('Result length:', reader.result.length);
-                        socket.emit('submit_track', {
-                            name: track.name,
-                            from: chatNick || 'Аноним',
-                            size: Math.round(blob.size / 1024) + ' КБ',
-                            base64: reader.result
-                        });
-                        alert('Трек отправлен на модерацию!');
-                    };
-                    reader.readAsDataURL(blob);
-                }
-            })
-            .catch(function() {
-                socket.emit('submit_track', {
-                    name: track.name,
-                    from: chatNick || 'Аноним',
-                    size: '? КБ'
-                });
-                alert('Трек отправлен (без файла — ошибка чтения).');
-            });
-    } else {
+    
+    if (!track.url.startsWith('blob:')) {
+        socket.emit('submit_track', { name: track.name, from: chatNick || 'Аноним', size: 'дефолт' });
+        alert('Трек отправлен!');
+        return;
+    }
+    
+    let reader = new FileReader();
+    reader.onload = function() {
+        alert('READER OK, длина: ' + reader.result.length);
         socket.emit('submit_track', {
             name: track.name,
             from: chatNick || 'Аноним',
-            size: 'дефолт'
+            size: '? КБ',
+            base64: reader.result
         });
-        alert('Трек отправлен на модерацию!');
-    }
+    };
+    reader.onerror = function() {
+        alert('READER ERROR');
+    };
+    
+    fetch(track.url)
+        .then(function(r) { return r.blob(); })
+        .then(function(b) {
+            alert('BLOB OK, размер: ' + b.size);
+            reader.readAsDataURL(b);
+        })
+        .catch(function() {
+            alert('FETCH ERROR');
+        });
 }
 	
 
