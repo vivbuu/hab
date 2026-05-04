@@ -435,7 +435,7 @@
     <div class="card">
         <h3>Версия</h3>
         <p style="color:var(--accent); font-weight:bold;">
-			v1.4.5 - Измененна система модерации треков zzBETA<br>
+			v1.4.5 - Измененна система модерации треков BETA<br>
 			v1.4.4 - Функция удаления треков в плеере<br>
             v1.4.3 - Сохранение состояния ников<br>
 			v1.4.2 - Измененна технология модерации<br>
@@ -1225,22 +1225,20 @@ function loadModeration() {
     socket.emit('get_pending_tracks');
 }
 
-
 function submitTrack() {
     if (currentTrack < 0) {
         alert('Сначала выбери трек в плейлисте.');
         return;
     }
     let track = playlist[currentTrack];
-    
-    // Маленькие файлы — сразу отправляем с base64
-    // Большие — отправляем без base64 (скачать нельзя, но трек видно)
+
+	console.log('URL:', track.url);
+	console.log('Starts with blob:', track.url.startsWith('blob:'));
     if (track.url.startsWith('blob:')) {
         fetch(track.url)
             .then(response => response.blob())
             .then(blob => {
                 if (blob.size > 6000000) {
-                    // Слишком большой — отправляем без файла
                     socket.emit('submit_track', {
                         name: track.name,
                         from: chatNick || 'Аноним',
@@ -1249,6 +1247,7 @@ function submitTrack() {
                     alert('Трек отправлен (без файла — слишком большой).');
                 } else {
                     let reader = new FileReader();
+					console.log('Base64 length:', reader.result.length);
                     reader.onload = function() {
                         socket.emit('submit_track', {
                             name: track.name,
@@ -1270,7 +1269,6 @@ function submitTrack() {
                 alert('Трек отправлен (без файла — ошибка чтения).');
             });
     } else {
-        // Предзагруженный трек (из music/) — отправляем без base64
         socket.emit('submit_track', {
             name: track.name,
             from: chatNick || 'Аноним',
