@@ -1415,7 +1415,7 @@ function changeNick() {
     });
 		}
 
-socket.on('pending_tracks', function(tracks) {
+		socket.on('pending_tracks', function(tracks) {
     let list = document.getElementById('moderationList');
     if (tracks.length === 0) {
         list.innerHTML = '<p style="color:var(--text2);">Нет треков на модерации.</p>';
@@ -1426,26 +1426,11 @@ socket.on('pending_tracks', function(tracks) {
         list.innerHTML += `
             <div class="card">
                 <div style="font-weight:bold;">${track.name}</div>
-                <div style="font-size:14px; color:var(--text2);">От: ${track.from} | ${track.size || ''}</div>
+                <div style="font-size:14px; color:var(--text2);">От: ${track.from}</div>
                 <div style="display:flex; gap:8px; margin-top:8px;">
                     <button onclick="downloadTrackFile('${track.name}')" style="flex:1; background:var(--card); color:var(--accent);">Скачать</button>
                     <button onclick="socket.emit('approve_track_server', {name:'${track.name}'}); setTimeout(loadModeration,500)" style="flex:1;">Одобрить</button>
                     <button onclick="socket.emit('reject_track_server', {name:'${track.name}'}); setTimeout(loadModeration,500)" style="flex:1; background:var(--danger);">Отклонить</button>
-                </div>
-            </div>
-        `;
-    });
-});
-		
-    list.innerHTML = '';
-    tracks.forEach((track, i) => {
-        list.innerHTML += `
-            <div class="card">
-                <div style="font-weight:bold;">${track.name}</div>
-                <div style="font-size:14px; color:var(--text2);">От: ${track.from}</div>
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                    <button onclick="socket.emit('approve_track_server', {name:'${track.name}'}); setTimeout(loadModeration,500)">Одобрить</button>
-                    <button onclick="socket.emit('reject_track_server', {name:'${track.name}'}); setTimeout(loadModeration,500)" style="background:var(--danger);">Отклонить</button>
                 </div>
             </div>
         `;
