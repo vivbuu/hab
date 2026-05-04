@@ -435,7 +435,7 @@
     <div class="card">
         <h3>Версия</h3>
         <p style="color:var(--accent); font-weight:bold;">
-			v1.4.6 - Новая система модерации треков<br>
+			v1.4.6 - Новая система модерации трекоsahfв<br>
 			v1.4.5 - Измененна система модерации треков BETA<br>
 			v1.4.4 - Функция удаления треков в плеере<br>
             v1.4.3 - Сохранение состояния ников<br>
@@ -1242,6 +1242,8 @@ function submitTrack() {
     let reader = new FileReader();
    reader.onload = function() {
     alert('READER OK, длина: ' + reader.result.length);
+	console.log('Socket exists:', !!socket);
+	console.log('Socket connected:', socket.connected);
     socket.emit('submit_track', {
         track: {
             name: track.name,
