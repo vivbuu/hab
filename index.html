@@ -1238,7 +1238,7 @@ function submitTrack() {
         fetch(track.url)
             .then(response => response.blob())
             .then(blob => {
-                if (blob.size > 8000000) {
+                if (false) {
                     socket.emit('submit_track', {
                         name: track.name,
                         from: chatNick || 'Аноним',
