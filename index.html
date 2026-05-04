@@ -1222,37 +1222,6 @@ function banUser(name) {
 function loadModeration() {
     socket.emit('get_pending_tracks');
 }
-    
-    list.innerHTML = '';
-    pending.forEach((track, i) => {
-        list.innerHTML += `
-            <div class="card">
-                <div style="font-weight:bold;">${track.name}</div>
-                <div style="font-size:14px; color:var(--text2);">От: ${track.from} | ${track.size}</div>
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                    <button onclick="downloadPending(${i})" style="flex:1; background:var(--card); color:var(--accent);">Скачать</button>
-                    <button onclick="Track(${i})" style="flex:1;">Одобрить</button>
-                    <button onclick="rejectTrack(${i})" style="flex:1; background:var(--danger);">Отклонить</button>
-                </div>
-            </div>
-        `;
-    });
-
-
-function approveTrack(i) {
-    let pending = JSON.parse(localStorage.getItem('pendingTracks') || '[]');
-    pending.splice(i, 1);
-    localStorage.setItem('pendingTracks', JSON.stringify(pending));
-    loadModeration();
-    alert('Трек одобрен! Скачай его и добавь в папку music/.');
-}
-
-function rejectTrack(i) {
-    let pending = JSON.parse(localStorage.getItem('pendingTracks') || '[]');
-    pending.splice(i, 1);
-    localStorage.setItem('pendingTracks', JSON.stringify(pending));
-    loadModeration();
-}
 
 
 function submitTrack() {
@@ -1266,43 +1235,7 @@ function submitTrack() {
     });
     alert('Трек отправлен на модерацию!');
 }
-		
-    let pending = JSON.parse(localStorage.getItem('pendingTracks') || '[]');
-    
-    if (pending.length >= 1) {
-        alert('Уже есть трек на модерации. Дождись одобрения.');
-        return;
-    }
-    
-    let track = playlist[currentTrack];
-    
-    // Конвертируем MP3 в Base64
-    fetch(track.url)
-        .then(response => response.blob())
-        .then(blob => {
-            let reader = new FileReader();
-            reader.onload = function() {
-                let base64 = reader.result;
-                
-                // Проверяем размер (не больше 8 МБ в Base64)
-                if (base64.length > 8000000) {
-                    alert('Трек слишком большой. Максимум 6 МБ.');
-                    return;
-                }
-                
-                pending.push({
-                    name: track.name,
-                    from: chatNick || 'Аноним',
-                    size: Math.round(blob.size / 1024) + ' КБ',
-                    base64: base64
-                });
-                
-                localStorage.setItem('pendingTracks', JSON.stringify(pending));
-                alert('Трек отправлен на модерацию!');
-            };
-            reader.readAsDataURL(blob);
-        });
-}
+	
 
 function downloadNote(i) {
     let notes = JSON.parse(localStorage.getItem('notes') || '[]');
