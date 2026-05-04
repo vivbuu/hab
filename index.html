@@ -435,7 +435,7 @@
     <div class="card">
         <h3>Версия</h3>
         <p style="color:var(--accent); font-weight:bold;">
-			v1.4.5 - Измененна система модерации треков BяETA<br>
+			v1.4.5 - Измененна система модерации треков BяzETA<br>
 			v1.4.4 - Функция удаления треков в плеере<br>
             v1.4.3 - Сохранение состояния ников<br>
 			v1.4.2 - Измененна технология модерации<br>
@@ -1232,32 +1232,12 @@ function submitTrack() {
         return;
     }
     let track = playlist[currentTrack];
-    
-    fetch(track.url)
-        .then(response => response.blob())
-        .then(blob => {
-            let reader = new FileReader();
-            reader.onload = function() {
-                let base64 = reader.result;
-                if (base64.length > 8000000) {
-                    alert('Трек слишком большой. Максимум 6 МБ.');
-                    return;
-                }
-                socket.emit('submit_track', {
-                    track: { 
-                        name: track.name, 
-                        from: chatNick || 'Аноним',
-                        size: Math.round(blob.size / 1024) + ' КБ',
-                        base64: base64
-                    }
-                });
-                alert('Трек отправлен на модерацию!');
-            };
-            reader.readAsDataURL(blob);
-        })
-        .catch(function() {
-            alert('Ошибка чтения файла. Попробуйте другой трек.');
-        });
+    socket.emit('submit_track', {
+        name: track.name,
+        from: chatNick || 'Аноним',
+        size: '0 КБ'
+    });
+    alert('Трек отправлен на модерацию!');
 }
 	
 
