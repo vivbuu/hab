@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4CAF50">
 <link rel="apple-touch-icon" href="icon512.png">
-ТИМУРКАШИН
+	
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         :root {
@@ -1487,16 +1487,27 @@ function downloadTrackFile(name) {
     socket.once('track_file', function(data) {
         if (data && data.base64 && data.base64.length > 100) {
             let a = document.createElement('a');
-            a.href = data.base64;
+            // Превращаем base64 в blob с правильным типом
+            let byteString = atob(data.base64.split(',')[1]);
+            let mimeString = data.base64.split(',')[0].split(':')[1].split(';')[0];
+            let ab = new ArrayBuffer(byteString.length);
+            let ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            let blob = new Blob([ab], { type: mimeString });
+            let url = URL.createObjectURL(blob);
+            a.href = url;
             a.download = data.name;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         } else {
             alert('Файл не найден. Длина: ' + (data && data.base64 ? data.base64.length : 'нет'));
         }
     });
-}
+				}
 		
     </script>
 </body>
