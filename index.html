@@ -8,7 +8,6 @@
     <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4CAF50">
 <link rel="apple-touch-icon" href="icon512.png">
-67	
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         :root {
@@ -263,6 +262,8 @@
         <div style="display:flex; gap:8px;">
             <input id="chatInput" type="text" placeholder="Сообщение..." style="flex:1;" onkeydown="if(event.key==='Enter')sendMsg()">
             <button onclick="sendMsg()">Отпр</button>
+			<input type="file" id="chatFileInput" style="display:none;" onchange="sendFile()">
+<button onclick="document.getElementById('chatFileInput').click()" style="background:var(--card);">Файл</button>
 <button onclick="toggleNotify()" id="notifyBtn" style="background:var(--card);">Звук вкл</button>
             <button onclick="clearChatRoom()" style="background:var(--danger);">Очистить</button>
         </div>
@@ -825,12 +826,63 @@ socket.on('message', function(msg) {
 }
 });
 
+socket.on('chat_file', function(file) {
+    if (file.room && file.room !== currentRoom) return;
+    let div = document.getElementById('chatMessages');
+    let time = new Date(file.time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    let isMe = file.nick === chatNick;
+    
+    if (file.type && file.type.startsWith('image/')) {
+        div.innerHTML += `
+            <div style="margin:6px 0; text-align:${isMe ? 'right' : 'left'};">
+                <div style="font-size:12px; color:var(--text2);">${file.nick} &middot; ${time}</div>
+                <img src="${file.base64}" style="max-width:200px; border-radius:8px; margin-top:4px;">
+            </div>
+        `;
+    } else {
+        div.innerHTML += `
+            <div style="margin:6px 0; padding:8px; background:${isMe ? 'var(--accent)' : 'var(--input-bg)'}; border-radius:8px; max-width:80%; ${isMe ? 'margin-left:auto;' : ''}">
+                <div style="font-size:12px; color:var(--text2);">${file.nick} &middot; ${time}</div>
+                <a href="${file.base64}" download="${file.name}" style="color:#fff;">${file.name} (${file.size})</a>
+            </div>
+        `;
+    }
+    div.scrollTop = div.scrollHeight;
+});
+
 function sendMsg() {
     let input = document.getElementById('chatInput');
     let text = input.value.trim();
     if (!text || !chatNick || !currentRoom) return;
     
     socket.emit('message', { nick: chatNick, text: text, time: Date.now(), room: currentRoom });
+    input.value = '';
+}
+
+function sendFile() {
+    let input = document.getElementById('chatFileInput');
+    let file = input.files[0];
+    if (!file || !chatNick || !currentRoom) return;
+    
+    let reader = new FileReader();
+    reader.onload = function() {
+        fetch('https://hub-server-wku5.onrender.com/upload_file', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                file: {
+                    name: file.name,
+                    nick: chatNick,
+                    room: currentRoom,
+                    type: file.type,
+                    size: Math.round(file.size / 1024) + ' КБ',
+                    base64: reader.result,
+                    time: Date.now()
+                }
+            })
+        });
+    };
+    reader.readAsDataURL(file);
     input.value = '';
 }
 
