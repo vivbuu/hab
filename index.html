@@ -1486,28 +1486,31 @@ function downloadTrackFile(name) {
     socket.emit('get_track_file', { name: name });
     socket.once('track_file', function(data) {
         if (data && data.base64 && data.base64.length > 100) {
-            let a = document.createElement('a');
-            // Превращаем base64 в blob с правильным типом
-            let byteString = atob(data.base64.split(',')[1]);
-            let mimeString = data.base64.split(',')[0].split(':')[1].split(';')[0];
+            let base64 = data.base64;
+            // Если есть заголовок data:..., убираем его
+            if (base64.includes(',')) {
+                base64 = base64.split(',')[1];
+            }
+            let byteString = atob(base64);
             let ab = new ArrayBuffer(byteString.length);
             let ia = new Uint8Array(ab);
             for (let i = 0; i < byteString.length; i++) {
                 ia[i] = byteString.charCodeAt(i);
             }
-            let blob = new Blob([ab], { type: mimeString });
+            let blob = new Blob([ab], { type: 'audio/mpeg' });
             let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
             a.href = url;
-            a.download = data.name;
+            a.download = data.name.endsWith('.mp3') ? data.name : data.name + '.mp3';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         } else {
-            alert('Файл не найден. Длина: ' + (data && data.base64 ? data.base64.length : 'нет'));
+            alert('Файл не найден.');
         }
     });
-				}
+}
 		
     </script>
 </body>
