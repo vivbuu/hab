@@ -430,7 +430,31 @@
             Предзагруженный плейлист для всех
         </p>
     </div>
+
+<div class="card">
+    <h3>Настройки</h3>
     
+    <p style="color:var(--text2); margin-bottom:4px;">Тема:</p>
+    <select id="themeSelect" onchange="changeTheme()" style="margin-bottom:10px;">
+        <option value="dark">Тёмная</option>
+        <option value="light">Светлая</option>
+        <option value="blue">Синяя</option>
+    </select>
+    
+    <p style="color:var(--text2); margin-bottom:4px;">Размер шрифта:</p>
+    <select id="fontSelect" onchange="changeFont()" style="margin-bottom:10px;">
+        <option value="small">Маленький</option>
+        <option value="normal">Средний</option>
+        <option value="large">Большой</option>
+    </select>
+    
+    <p style="color:var(--text2); margin-bottom:4px;">Язык:</p>
+    <select id="langSelect" onchange="changeLang()">
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+    </select>
+</div>
+	
     <div class="card">
         <h3>Автор</h3>
         <p style="color:var(--text2);">НЕКИЙ ГУСЕВ. сделано с душой на 2ГБ оперативки и MX linux. 
@@ -1575,6 +1599,63 @@ function downloadTrackFile(name) {
         }
     });
 }
+
+
+
+		// === НАСТРОЙКИ ===
+function changeTheme() {
+    let theme = document.getElementById('themeSelect').value;
+    document.body.classList.remove('theme-light', 'theme-blue');
+    if (theme === 'light') document.body.classList.add('theme-light');
+    if (theme === 'blue') document.body.classList.add('theme-blue');
+    localStorage.setItem('theme', theme);
+}
+
+function changeFont() {
+    let size = document.getElementById('fontSelect').value;
+    document.body.classList.remove('font-small', 'font-large');
+    if (size === 'small') document.body.classList.add('font-small');
+    if (size === 'large') document.body.classList.add('font-large');
+    localStorage.setItem('fontSize', size);
+}
+
+function changeLang() {
+    let lang = document.getElementById('langSelect').value;
+    localStorage.setItem('lang', lang);
+    if (lang === 'en') {
+        document.querySelector('#tab-time h2').textContent = 'Time';
+        document.querySelector('#tab-player h2').textContent = 'Player';
+        document.querySelector('#tab-chat h2').textContent = 'Chat';
+        document.querySelector('#tab-notes h2').textContent = 'Notes';
+        document.querySelector('#tabs button:nth-child(1)').childNodes[1].textContent = 'Time';
+        document.querySelector('#tabs button:nth-child(2)').childNodes[1].textContent = 'Player';
+        document.querySelector('#tabs button:nth-child(3)').childNodes[1].textContent = 'Chat';
+        document.querySelector('#tabs button:nth-child(4)').childNodes[1].textContent = 'Notes';
+    } else {
+        document.querySelector('#tab-time h2').textContent = 'Время';
+        document.querySelector('#tab-player h2').textContent = 'Плеер';
+        document.querySelector('#tab-chat h2').textContent = 'Чат';
+        document.querySelector('#tab-notes h2').textContent = 'Заметки';
+        document.querySelector('#tabs button:nth-child(1)').childNodes[1].textContent = 'Время';
+        document.querySelector('#tabs button:nth-child(2)').childNodes[1].textContent = 'Плеер';
+        document.querySelector('#tabs button:nth-child(3)').childNodes[1].textContent = 'Чат';
+        document.querySelector('#tabs button:nth-child(4)').childNodes[1].textContent = 'Заметки';
+    }
+}
+
+// Загрузка сохранённых настроек
+(function() {
+    let theme = localStorage.getItem('theme') || 'dark';
+    let fontSize = localStorage.getItem('fontSize') || 'normal';
+    let lang = localStorage.getItem('lang') || 'ru';
+    
+    document.getElementById('themeSelect').value = theme;
+    document.getElementById('fontSelect').value = fontSize;
+    document.getElementById('langSelect').value = lang;
+    
+    changeTheme();
+    changeFont();
+})();
 		
     </script>
 </body>
