@@ -868,6 +868,13 @@ function sendFile() {
     let file = input.files[0];
     if (!file || !chatNick || !currentRoom) return;
     
+    // Проверка размера: максимум 6 МБ
+    if (file.size > 6 * 1024 * 1024) {
+        alert('Файл слишком большой. Максимум 6 МБ.');
+        input.value = '';
+        return;
+    }
+    
     let reader = new FileReader();
     reader.onload = function() {
         fetch('https://hub-server-wku5.onrender.com/upload_file', {
