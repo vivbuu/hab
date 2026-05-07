@@ -455,26 +455,7 @@ body.font-large { font-size: 18px; }
 <div class="card">
     <h3>Настройки</h3>
     
-    <p style="color:var(--text2); margin-bottom:4px;">Тема:</p>
-    <select id="themeSelect" onchange="changeTheme()" style="margin-bottom:10px;">
-        <option value="dark">Тёмная</option>
-        <option value="light">Светлая</option>
-        <option value="blue">Синяя</option>
-    </select>
     
-    <p style="color:var(--text2); margin-bottom:4px;">Размер шрифта:</p>
-    <select id="fontSelect" onchange="changeFont()" style="margin-bottom:10px;">
-        <option value="small">Маленький</option>
-        <option value="normal">Средний</option>
-        <option value="large">Большой</option>
-    </select>
-    
-    <p style="color:var(--text2); margin-bottom:4px;">Язык:</p>
-    <select id="langSelect" onchange="changeLang()">
-        <option value="ru">Русский</option>
-        <option value="en">English</option>
-    </select>
-</div>
 	
     <div class="card">
         <h3>Автор</h3>
@@ -574,16 +555,50 @@ body.font-large { font-size: 18px; }
 </button>
     </div>
 
+
+<div id="tab-settings" class="tab">
+    <h2>Настройки</h2>
+    
+    <div class="card">
+        <h3>Тема</h3>
+        <select id="themeSelect" onchange="changeTheme()">
+            <option value="dark">Тёмная</option>
+            <option value="light">Светлая</option>
+            <option value="blue">Синяя</option>
+        </select>
+    </div>
+    
+    <div class="card">
+        <h3>Размер шрифта</h3>
+        <select id="fontSelect" onchange="changeFont()">
+            <option value="small">Маленький</option>
+            <option value="normal">Средний</option>
+            <option value="large">Большой</option>
+        </select>
+    </div>
+    
+    <div class="card">
+        <h3>Язык</h3>
+        <select id="langSelect" onchange="changeLang()">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+        </select>
+    </div>
+</div>
+	
+	
 <!-- Меню "Ещё" -->
 <div id="moreMenu" style="display:none; position:fixed; bottom:75px; right:10px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:8px; z-index:200; min-width:160px;">
     <button onclick="openTab('timer'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Таймер</button>
     <button onclick="openTab('random'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Рандом</button>
     <button onclick="openTab('news'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Новости</button>
     <button onclick="openTab('weather'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Погода</button>
+	<button onclick="openTab('settings'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Настройки</button>
     <button onclick="openTab('info'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Инфо</button>
     <button onclick="openTab('admin'); toggleMoreMenu()" style="display:block; width:100%; text-align:left; background:none; color:var(--text);">Админ</button>
 </div>
 
+	
     <script>
         function openTab(name) {
             // Скрыть все вкладки
@@ -1643,26 +1658,39 @@ function changeFont() {
 function changeLang() {
     let lang = document.getElementById('langSelect').value;
     localStorage.setItem('lang', lang);
-    if (lang === 'en') {
-        document.querySelector('#tab-time h2').textContent = 'Time';
-        document.querySelector('#tab-player h2').textContent = 'Player';
-        document.querySelector('#tab-chat h2').textContent = 'Chat';
-        document.querySelector('#tab-notes h2').textContent = 'Notes';
-        document.querySelector('#tabs button:nth-child(1)').childNodes[1].textContent = 'Time';
-        document.querySelector('#tabs button:nth-child(2)').childNodes[1].textContent = 'Player';
-        document.querySelector('#tabs button:nth-child(3)').childNodes[1].textContent = 'Chat';
-        document.querySelector('#tabs button:nth-child(4)').childNodes[1].textContent = 'Notes';
-    } else {
-        document.querySelector('#tab-time h2').textContent = 'Время';
-        document.querySelector('#tab-player h2').textContent = 'Плеер';
-        document.querySelector('#tab-chat h2').textContent = 'Чат';
-        document.querySelector('#tab-notes h2').textContent = 'Заметки';
-        document.querySelector('#tabs button:nth-child(1)').childNodes[1].textContent = 'Время';
-        document.querySelector('#tabs button:nth-child(2)').childNodes[1].textContent = 'Плеер';
-        document.querySelector('#tabs button:nth-child(3)').childNodes[1].textContent = 'Чат';
-        document.querySelector('#tabs button:nth-child(4)').childNodes[1].textContent = 'Заметки';
+    
+    let t = {
+        ru: ['Время', 'Плеер', 'Чат', 'Заметки', 'Ещё', 'Таймер', 'Рандом', 'Новости', 'Погода', 'Инфо', 'Админ', 'Настройки'],
+        en: ['Time', 'Player', 'Chat', 'Notes', 'More', 'Timer', 'Random', 'News', 'Weather', 'Info', 'Admin', 'Settings']
+    };
+    let txt = t[lang];
+    
+    // Заголовки вкладок
+    document.querySelector('#tab-time h2').textContent = txt[0];
+    document.querySelector('#tab-player h2').textContent = txt[1];
+    document.querySelector('#tab-chat h2').textContent = txt[2];
+    document.querySelector('#tab-notes h2').textContent = txt[3];
+    
+    // Нижние вкладки
+    let tabs = document.querySelectorAll('#tabs button');
+    tabs[0].childNodes[1].textContent = txt[0];
+    tabs[1].childNodes[1].textContent = txt[1];
+    tabs[2].childNodes[1].textContent = txt[2];
+    tabs[3].childNodes[1].textContent = txt[3];
+    tabs[4].childNodes[1].textContent = txt[4];
+    
+    // Меню «Ещё»
+    let menu = document.querySelectorAll('#moreMenu button');
+    if (menu.length >= 7) {
+        menu[0].childNodes[0].textContent = txt[5];
+        menu[1].childNodes[0].textContent = txt[6];
+        menu[2].childNodes[0].textContent = txt[7];
+        menu[3].childNodes[0].textContent = txt[8];
+        menu[4].childNodes[0].textContent = txt[9];
+        menu[5].childNodes[0].textContent = txt[10];
+        menu[6].childNodes[0].textContent = txt[11];
     }
-}
+		}
 
 // Загрузка сохранённых настроек
 (function() {
